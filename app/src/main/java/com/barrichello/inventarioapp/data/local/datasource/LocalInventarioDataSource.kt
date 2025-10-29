@@ -2,14 +2,21 @@ package com.barrichello.inventarioapp.data.local.datasource
 
 import com.barrichello.inventarioapp.data.local.db.InventarioDao
 import com.barrichello.inventarioapp.data.local.db.InventarioItemEntity
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class LocalInventarioDataSource @Inject constructor(
     private val inventarioDao: InventarioDao
 ) {
-    fun getAllItems() = inventarioDao.getAllItems()
+    fun getAllItems(): Flow<List<InventarioItemEntity>> {
+        return inventarioDao.getAllItems()
+    }
 
-    fun getTotalItemCount() = inventarioDao.getTotalItemCount()
+    fun getTotalItemCount(): Flow<Int?> {
+        return inventarioDao.getTotalItemCount()
+    }
 
-    suspend fun upsertItem(item: InventarioItemEntity) = inventarioDao.upsertItem(item)
+    suspend fun upsertItem(item: InventarioItemEntity) {
+        inventarioDao.upsertItem(item)
+    }
 }
