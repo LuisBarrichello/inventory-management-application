@@ -42,7 +42,9 @@ fun AppNavigation() {
         }
 
         composable(AppScreens.Export.route) {
-            ExportScreen()
+            ExportScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }
