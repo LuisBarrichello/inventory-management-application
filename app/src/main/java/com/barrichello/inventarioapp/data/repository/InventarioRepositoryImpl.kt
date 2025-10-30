@@ -1,7 +1,6 @@
 package com.barrichello.inventarioapp.data.repository
 
 import com.barrichello.inventarioapp.data.local.datasource.LocalInventarioDataSource
-import com.barrichello.inventarioapp.data.local.db.InventarioItemEntity
 import com.barrichello.inventarioapp.data.local.mapper.toDomain
 import com.barrichello.inventarioapp.data.local.mapper.toEntity
 import com.barrichello.inventarioapp.domain.model.InventarioItem
@@ -26,5 +25,9 @@ class InventarioRepositoryImpl @Inject constructor(
 
     override suspend fun upsertItem(item: InventarioItem) {
         localDataSource.upsertItem(item.toEntity())
+    }
+
+    override suspend fun getItemByCodigo(codigo: String): InventarioItem? {
+        return localDataSource.getItemByCodigo(codigo)?.toDomain()
     }
 }

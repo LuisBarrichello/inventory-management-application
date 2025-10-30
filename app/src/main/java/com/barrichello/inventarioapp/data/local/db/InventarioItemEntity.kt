@@ -7,6 +7,5 @@ import androidx.room.PrimaryKey
 data class InventarioItemEntity(
     @PrimaryKey
     val codigo: String,
-    val quantidade: Int,
     val ultimoUpdate: Long
 )

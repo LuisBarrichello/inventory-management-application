@@ -11,4 +11,6 @@ interface InventarioRepository {
     fun getTotalItemCount(): Flow<Int?>
 
     suspend fun upsertItem(item: InventarioItem)
+
+    suspend fun getItemByCodigo(codigo: String): InventarioItem?
 }

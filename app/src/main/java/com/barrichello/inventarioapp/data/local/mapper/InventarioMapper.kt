@@ -6,15 +6,13 @@ import com.barrichello.inventarioapp.domain.model.InventarioItem
 fun InventarioItemEntity.toDomain(): InventarioItem {
     return InventarioItem(
         codigo = this.codigo,
-        quantidade = this.quantidade,
-        ultimoUpdate = this.ultimoUpdate
+        lastUpdate = this.ultimoUpdate
     )
 }
 
 fun InventarioItem.toEntity(): InventarioItemEntity {
     return InventarioItemEntity(
         codigo = this.codigo,
-        quantidade = this.quantidade,
-        ultimoUpdate = this.ultimoUpdate
+        ultimoUpdate = this.lastUpdate
     )
 }
