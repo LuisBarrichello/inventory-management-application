@@ -24,4 +24,12 @@ class LocalInventarioDataSource @Inject constructor(
     suspend fun getItemByCodigo(codigo: String): InventarioItemEntity? {
         return inventarioDao.getItemByCodigo(codigo)
     }
+
+    suspend fun deleteItem(codigo: String) {
+        inventarioDao.deleteItem(codigo)
+    }
+
+    suspend fun clearAll() {
+        inventarioDao.clearAll()
+    }
 }

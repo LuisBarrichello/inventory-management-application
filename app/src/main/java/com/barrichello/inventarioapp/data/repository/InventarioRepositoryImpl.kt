@@ -30,4 +30,12 @@ class InventarioRepositoryImpl @Inject constructor(
     override suspend fun getItemByCodigo(codigo: String): InventarioItem? {
         return localDataSource.getItemByCodigo(codigo)?.toDomain()
     }
+
+    override suspend fun deleteItem(codigo: String) {
+        localDataSource.deleteItem(codigo)
+    }
+
+    override suspend fun clearAll() {
+        localDataSource.clearAll()
+    }
 }

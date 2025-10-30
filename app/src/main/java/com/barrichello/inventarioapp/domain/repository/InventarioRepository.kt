@@ -13,4 +13,8 @@ interface InventarioRepository {
     suspend fun upsertItem(item: InventarioItem)
 
     suspend fun getItemByCodigo(codigo: String): InventarioItem?
+
+    suspend fun deleteItem(codigo: String)
+
+    suspend fun clearAll()
 }

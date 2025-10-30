@@ -20,4 +20,10 @@ interface InventarioDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: InventarioItemEntity)
+
+    @Query("DELETE FROM inventario_items WHERE codigo = :codigo")
+    suspend fun deleteItem(codigo: String)
+
+    @Query("DELETE FROM inventario_items")
+    suspend fun clearAll()
 }

@@ -36,7 +36,9 @@ fun AppNavigation() {
         }
 
         composable(AppScreens.StockList.route) {
-            StockListScreen()
+            StockListScreen(
+                onNavegateBack = { navController.popBackStack() }
+            )
         }
 
         composable(AppScreens.Export.route) {
