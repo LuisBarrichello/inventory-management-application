@@ -3,6 +3,7 @@ package com.barrichello.inventarioapp.ui.scanner
 import android.Manifest
 import android.util.Log
 import android.view.ViewGroup
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -21,8 +22,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
@@ -33,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -48,7 +53,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,6 +68,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
@@ -97,21 +106,24 @@ private fun ScannerContent(
 
     var hasFlashlight by remember { mutableStateOf(false) }
     var isFlashlightOn by remember { mutableStateOf(false) }
-    val camera = remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
+    val camera = remember { mutableStateOf<Camera?>(null) }
     val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = remember {
         ProcessCameraProvider.getInstance(context)
     }
     val barcodeAnalyzer = remember {
-        BarcodeAnalyzer { code -> viewModel.onBarcodeScanned(code) }
+        BarcodeAnalyzer { barcode, extractedData ->
+            viewModel.onResultFound(barcode, extractedData)
+        }
     }
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val showBottomSheet = uiState.scannedCode != null
+    val showBottomSheet = uiState.scannedBarcode != null
 
     LaunchedEffect(showBottomSheet) {
         if (showBottomSheet) {
             barcodeAnalyzer.pause()
         } else {
-            kotlinx.coroutines.delay(500)
+            delay(500)
             barcodeAnalyzer.resume()
         }
     }
@@ -196,9 +208,8 @@ private fun ScannerContent(
             sheetState = sheetState
         ) {
             ScannerBottomSheetContent(
-                scannedCode = uiState.scannedCode!!,
-                isDuplicate = uiState.isDuplicate,
-                onConfirm = { viewModel.onConfirmItem() },
+                uiState = uiState,
+                viewModel = viewModel,
                 onCancel = { viewModel.dismissBottomSheet() }
             )
         }
@@ -207,65 +218,101 @@ private fun ScannerContent(
 
 @Composable
 private fun ScannerBottomSheetContent(
-    scannedCode: String,
-    isDuplicate: Boolean,
-    onConfirm: () -> Unit,
+    uiState: ScannerUiState,
+    viewModel: ScannerViewModel,
     onCancel: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Item Escaneado",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        Text("Barcode: ${uiState.scannedBarcode}", style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(16.dp))
 
-        Text(
-            text = scannedCode,
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                .padding(vertical = 16.dp),
-            textAlign = TextAlign.Center
+        OutlinedTextField(
+            value = uiState.coilId,
+            onValueChange = { viewModel.onCoilIdChanged(it) },
+            label = { Text("ID da Bobina (G)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
         )
+        Spacer(Modifier.height(8.dp))
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = uiState.weight,
+                onValueChange = { viewModel.onWeightChanged(it) },
+                label = { Text("Peso (kg)") },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+            )
+            OutlinedTextField(
+                value = uiState.thickness,
+                onValueChange = { viewModel.onThicknessChanged(it) },
+                label = { Text("Espessura") },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = uiState.quality,
+            onValueChange = { viewModel.onQualityChanged(it) },
+            label = { Text("Qualidade") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+        )
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = uiState.color,
+            onValueChange = { viewModel.onColorChanged(it) },
+            label = { Text("Cor") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+        )
+
         Spacer(Modifier.height(24.dp))
 
-        if (isDuplicate) {
+        if (uiState.isDuplicate) {
             Text(
-                text = "Esta bobina já foi contada.",
+                text = "DUPLICATE ITEM!",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(16.dp))
         }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f).height(50.dp)
             ) {
-                Text("CANCELAR", fontSize = 16.sp)
+                Text("CANCELAR")
             }
-            Spacer(Modifier.width(16.dp))
             Button(
-                onClick = onConfirm,
+                onClick = { viewModel.onConfirmItem() },
                 modifier = Modifier.weight(1f).height(50.dp)
             ) {
-                Text(if (isDuplicate) "OK" else "CONFIRMAR", fontSize = 16.sp)
+                Text(if (uiState.isDuplicate) "SUBSTITUIR" else "CONFIRMAR")
             }
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(300.dp))
     }
 }
 

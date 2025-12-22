@@ -5,14 +5,24 @@ import com.barrichello.inventarioapp.domain.model.InventarioItem
 
 fun InventarioItemEntity.toDomain(): InventarioItem {
     return InventarioItem(
-        codigo = this.codigo,
-        lastUpdate = this.ultimoUpdate
+        barcode = this.barcode,
+        coilId = this.coilId,
+        weight = this.weight,
+        thickness = this.thickness,
+        quality = this.quality,
+        color = this.color,
+        lastUpdate = this.ultimoUpdate,
     )
 }
 
 fun InventarioItem.toEntity(): InventarioItemEntity {
     return InventarioItemEntity(
-        codigo = this.codigo,
-        ultimoUpdate = this.lastUpdate
+        barcode = this.barcode,
+        coilId = this.coilId,
+        weight = this.weight,
+        thickness = this.thickness,
+        quality = this.quality,
+        color = this.color,
+        ultimoUpdate = this.lastUpdate,
     )
 }

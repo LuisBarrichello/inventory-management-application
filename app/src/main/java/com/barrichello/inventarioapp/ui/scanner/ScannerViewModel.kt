@@ -2,6 +2,7 @@ package com.barrichello.inventarioapp.ui.scanner
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.barrichello.inventarioapp.core.barcode.ExtractedData
 import com.barrichello.inventarioapp.domain.usecase.AddItemResult
 import com.barrichello.inventarioapp.domain.usecase.AdditemUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +14,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ScannerUiState(
-    val scannedCode: String? = null,
+    val scannedBarcode: String? = null,
+    val coilId: String = "",
+    val weight: String = "",
+    val thickness: String = "",
+    val quality: String = "",
+    val color: String = "",
     val isDuplicate: Boolean = false
 )
 
@@ -23,33 +29,49 @@ class ScannerViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ScannerUiState())
     val uiState: StateFlow<ScannerUiState> = _uiState.asStateFlow()
-    fun onBarcodeScanned(code: String) {
-        _uiState.update {
-            it.copy(
-                scannedCode = code,
-                isDuplicate = false
-            )
-        }
-    }
 
     fun onConfirmItem() {
-        val code = _uiState.value.scannedCode ?: return
+        val state = _uiState.value
+        val code = state.scannedBarcode ?: return
 
         viewModelScope.launch {
-            when (addItemUseCase(codigo = code)) {
-                is AddItemResult.Success -> {
-                    dismissBottomSheet()
-                }
-                is AddItemResult.Duplicate -> {
-                    _uiState.update { it.copy(isDuplicate = true) }
-                }
+            val result = addItemUseCase(
+                barcode = code,
+                coilId = state.coilId,
+                weight = state.weight,
+                thickness = state.thickness,
+                quality = state.quality,
+                color = state.color
+            )
+
+            when (result) {
+                is AddItemResult.Success -> dismissBottomSheet()
+                is AddItemResult.Duplicate -> _uiState.update { it.copy(isDuplicate = true) }
             }
         }
     }
 
     fun dismissBottomSheet() {
+        _uiState.update { ScannerUiState() }
+    }
+
+    fun onResultFound(barcode: String, data: ExtractedData) {
         _uiState.update {
-            it.copy(scannedCode = null, isDuplicate = false)
+            it.copy(
+                scannedBarcode = barcode,
+                coilId = data.coilId,
+                weight = data.weight,
+                thickness = data.thickness,
+                quality = data.quality,
+                color = data.color,
+                isDuplicate = false
+            )
         }
     }
+
+    fun onCoilIdChanged(v: String) { _uiState.update { it.copy(coilId = v) } }
+    fun onWeightChanged(v: String) { _uiState.update { it.copy(weight = v) } }
+    fun onThicknessChanged(v: String) { _uiState.update { it.copy(thickness = v) } }
+    fun onQualityChanged(v: String) { _uiState.update { it.copy(quality = v) } }
+    fun onColorChanged(v: String) { _uiState.update { it.copy(color = v) } }
 }

@@ -6,6 +6,11 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "inventario_items")
 data class InventarioItemEntity(
     @PrimaryKey
-    val codigo: String,
+    val barcode: String,
+    val coilId: String,
+    val weight: String,
+    val thickness: String,
+    val quality: String,
+    val color: String,
     val ultimoUpdate: Long
 )

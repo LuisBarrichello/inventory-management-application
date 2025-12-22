@@ -15,13 +15,13 @@ interface InventarioDao {
     @Query("SELECT COUNT() FROM inventario_items")
     fun getTotalItemCount(): Flow<Int?>
 
-    @Query("SELECT * FROM inventario_items WHERE codigo = :codigo LIMIT 1")
+    @Query("SELECT * FROM inventario_items WHERE barcode = :codigo LIMIT 1")
     suspend fun getItemByCodigo(codigo: String): InventarioItemEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: InventarioItemEntity)
 
-    @Query("DELETE FROM inventario_items WHERE codigo = :codigo")
+    @Query("DELETE FROM inventario_items WHERE barcode = :codigo")
     suspend fun deleteItem(codigo: String)
 
     @Query("DELETE FROM inventario_items")
