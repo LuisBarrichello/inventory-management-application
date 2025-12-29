@@ -56,9 +56,11 @@ class ScannerViewModel @Inject constructor(
     }
 
     fun onResultFound(barcode: String, data: ExtractedData) {
+        val cleanBarcode = barcode.trimStart('0').ifEmpty { barcode }
+
         _uiState.update {
             it.copy(
-                scannedBarcode = barcode,
+                scannedBarcode = cleanBarcode,
                 coilId = data.coilId,
                 weight = data.weight,
                 thickness = data.thickness,
@@ -69,6 +71,7 @@ class ScannerViewModel @Inject constructor(
         }
     }
 
+    fun onBarcodeChanged(v: String) { _uiState.update { it.copy(scannedBarcode = v) } }
     fun onCoilIdChanged(v: String) { _uiState.update { it.copy(coilId = v) } }
     fun onWeightChanged(v: String) { _uiState.update { it.copy(weight = v) } }
     fun onThicknessChanged(v: String) { _uiState.update { it.copy(thickness = v) } }

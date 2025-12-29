@@ -11,7 +11,7 @@ class CsvExporter @Inject constructor() {
     fun export(items: List<InventarioItem>): String {
         val csvBuilder  = StringBuilder()
 
-        csvBuilder.append("Barcode,CoilID,Weight,Thickness,Quality,Color,Timestamp\n")
+        csvBuilder.append("Etiqueta,ID G,Peso,Espessurra,Qualidade,Cor,Hora de leitura\n")
 
         items.forEach { item ->
             val formattedDate = sdf.format(item.lastUpdate)

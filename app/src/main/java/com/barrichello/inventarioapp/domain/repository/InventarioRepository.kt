@@ -1,6 +1,5 @@
 package com.barrichello.inventarioapp.domain.repository
 
-import com.barrichello.inventarioapp.data.local.db.InventarioItemEntity
 import com.barrichello.inventarioapp.domain.model.InventarioItem
 import kotlinx.coroutines.flow.Flow
 
@@ -12,7 +11,9 @@ interface InventarioRepository {
 
     suspend fun upsertItem(item: InventarioItem)
 
-    suspend fun getItemByCodigo(codigo: String): InventarioItem?
+    suspend fun getItemByBarcode(codigo: String): InventarioItem?
+
+    suspend fun getItemByCoilId(coilId: String): InventarioItem?
 
     suspend fun deleteItem(codigo: String)
 

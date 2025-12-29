@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface InventarioDao {
-
     @Query("SELECT * FROM inventario_items ORDER BY ultimoUpdate DESC")
     fun getAllItems(): Flow<List<InventarioItemEntity>>
 
@@ -17,6 +16,9 @@ interface InventarioDao {
 
     @Query("SELECT * FROM inventario_items WHERE barcode = :codigo LIMIT 1")
     suspend fun getItemByCodigo(codigo: String): InventarioItemEntity?
+
+    @Query("SELECT * FROM inventario_items WHERE coilId = :coilId LIMIT 1")
+    suspend fun getItemByCoilId(coilId: String): InventarioItemEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItem(item: InventarioItemEntity)

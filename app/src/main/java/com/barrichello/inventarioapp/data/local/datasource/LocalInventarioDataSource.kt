@@ -2,7 +2,6 @@ package com.barrichello.inventarioapp.data.local.datasource
 
 import com.barrichello.inventarioapp.data.local.db.InventarioDao
 import com.barrichello.inventarioapp.data.local.db.InventarioItemEntity
-import com.barrichello.inventarioapp.domain.model.InventarioItem
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -21,8 +20,12 @@ class LocalInventarioDataSource @Inject constructor(
         inventarioDao.upsertItem(item)
     }
 
-    suspend fun getItemByCodigo(codigo: String): InventarioItemEntity? {
+    suspend fun getItemByBarcode(codigo: String): InventarioItemEntity? {
         return inventarioDao.getItemByCodigo(codigo)
+    }
+
+    suspend fun getItemByCoilId(coilId: String): InventarioItemEntity? {
+        return inventarioDao.getItemByCoilId(coilId)
     }
 
     suspend fun deleteItem(codigo: String) {
