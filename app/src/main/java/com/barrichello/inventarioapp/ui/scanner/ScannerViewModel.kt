@@ -52,7 +52,7 @@ class ScannerViewModel @Inject constructor(
     }
 
     fun dismissBottomSheet() {
-        _uiState.update { ScannerUiState() }
+        _uiState.update { ScannerUiState(scannedBarcode = null) }
     }
 
     fun onResultFound(barcode: String, data: ExtractedData) {
@@ -77,4 +77,18 @@ class ScannerViewModel @Inject constructor(
     fun onThicknessChanged(v: String) { _uiState.update { it.copy(thickness = v) } }
     fun onQualityChanged(v: String) { _uiState.update { it.copy(quality = v) } }
     fun onColorChanged(v: String) { _uiState.update { it.copy(color = v) } }
+
+    fun onStartManualEntry() {
+        _uiState.update {
+            it.copy(
+                scannedBarcode = "",
+                coilId = "",
+                weight = "",
+                thickness = "",
+                quality = "",
+                color = "",
+                isDuplicate = false
+            )
+        }
+    }
 }
