@@ -7,5 +7,6 @@ data class InventarioItem (
     val thickness: String,
     val quality: String,
     val color: String,
+    val location: String,
     val lastUpdate: Long
 )

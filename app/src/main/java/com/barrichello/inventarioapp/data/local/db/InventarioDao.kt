@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface InventarioDao {
-    @Query("SELECT * FROM inventario_items ORDER BY ultimoUpdate DESC")
+    @Query("SELECT * FROM inventario_items ORDER BY lastUpdate DESC")
     fun getAllItems(): Flow<List<InventarioItemEntity>>
 
     @Query("SELECT COUNT() FROM inventario_items")

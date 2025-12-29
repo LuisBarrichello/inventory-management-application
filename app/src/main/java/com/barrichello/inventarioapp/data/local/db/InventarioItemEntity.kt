@@ -1,4 +1,4 @@
-package com.barrichello.inventarioapp.data.local.db // Pacote corrigido
+package com.barrichello.inventarioapp.data.local.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -12,5 +12,6 @@ data class InventarioItemEntity(
     val thickness: String,
     val quality: String,
     val color: String,
-    val ultimoUpdate: Long
+    val location: String,
+    val lastUpdate: Long
 )

@@ -11,7 +11,8 @@ fun InventarioItemEntity.toDomain(): InventarioItem {
         thickness = this.thickness,
         quality = this.quality,
         color = this.color,
-        lastUpdate = this.ultimoUpdate,
+        location = location,
+        lastUpdate = this.lastUpdate,
     )
 }
 
@@ -23,6 +24,7 @@ fun InventarioItem.toEntity(): InventarioItemEntity {
         thickness = this.thickness,
         quality = this.quality,
         color = this.color,
-        ultimoUpdate = this.lastUpdate,
+        location = location,
+        lastUpdate = this.lastUpdate,
     )
 }

@@ -78,18 +78,21 @@ class BarcodeAnalyzer(
 
     private fun parseLabelText(fullText: String): ExtractedData {
         val coilIdPattern = Regex("""\b\d{5}\b""")
-        val weightPattern = Regex("""(?i)PESO:?\s*([\d\.,]+)""")
-        val thicknessPattern = Regex("""(?i)ESPESSURA:?\s*([\d\.,]+)""")
-        val qualityPattern = Regex("""(?i)QUALIDADE:?\s*(.+)""")
-        val colorPattern = Regex("""(?i)COR:?\s*(.+)""")
+        val weightPattern = Regex("""(?i)PESO[:\s\n]*([\d\.,]+)""")
+        val thicknessPattern = Regex("""(?i)ESPESSURA[:\s\n]*([\d\.,]+)""")
+        val qualityPattern = Regex("""(?i)QUALIDADE[:\s\n]*(.+)""")
+        val colorPattern = Regex("""(?i)COR[:\s\n]*(.+)""")
 
         Log.d("OCR_DEBUG", fullText)
 
         val coilId = coilIdPattern.find(fullText)?.value ?: ""
-        val weight = weightPattern.find(fullText)?.groupValues?.get(1) ?: ""
-        val thickness = thicknessPattern.find(fullText)?.groupValues?.get(1) ?: ""
+        val rawWeight = weightPattern.find(fullText)?.groupValues?.get(1) ?: ""
+        val rawThickness = thicknessPattern.find(fullText)?.groupValues?.get(1) ?: ""
         val quality = qualityPattern.find(fullText)?.groupValues?.get(1)?.trim() ?: ""
         val color = colorPattern.find(fullText)?.groupValues?.get(1)?.trim() ?: ""
+
+        val weight = toBrazilianFormat(rawWeight)
+        val thickness = toBrazilianFormat(rawThickness)
 
         return ExtractedData(coilId, weight, thickness, quality, color)
     }
@@ -100,5 +103,10 @@ class BarcodeAnalyzer(
 
     fun resume() {
         isScanning.set(true)
+    }
+
+    private fun toBrazilianFormat(value: String): String {
+        if (value.isBlank()) return ""
+        return value.replace(".", ",")
     }
 }

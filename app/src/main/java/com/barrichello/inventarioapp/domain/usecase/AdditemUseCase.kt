@@ -18,7 +18,8 @@ class AdditemUseCase @Inject constructor(
       weight: String,
       thickness: String,
       quality: String,
-      color: String
+      color: String,
+      location: String
    ): AddItemResult {
       val existingBarcode = repository.getItemByBarcode(barcode)
       val existingCoilId = repository.getItemByCoilId(coilId)
@@ -34,6 +35,7 @@ class AdditemUseCase @Inject constructor(
          thickness = thickness,
          quality = quality,
          color = color,
+         location = location,
          lastUpdate = System.currentTimeMillis()
       )
 

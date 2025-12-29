@@ -20,6 +20,7 @@ data class ScannerUiState(
     val thickness: String = "",
     val quality: String = "",
     val color: String = "",
+    val location: String = "",
     val isDuplicate: Boolean = false
 )
 
@@ -34,6 +35,9 @@ class ScannerViewModel @Inject constructor(
         val state = _uiState.value
         val code = state.scannedBarcode ?: return
 
+        val rawLoc = state.location.uppercase()
+        val finalLocation = if (rawLoc.startsWith("F-")) rawLoc else "F-$rawLoc"
+
         viewModelScope.launch {
             val result = addItemUseCase(
                 barcode = code,
@@ -41,7 +45,8 @@ class ScannerViewModel @Inject constructor(
                 weight = state.weight,
                 thickness = state.thickness,
                 quality = state.quality,
-                color = state.color
+                color = state.color,
+                location = finalLocation
             )
 
             when (result) {
@@ -77,6 +82,7 @@ class ScannerViewModel @Inject constructor(
     fun onThicknessChanged(v: String) { _uiState.update { it.copy(thickness = v) } }
     fun onQualityChanged(v: String) { _uiState.update { it.copy(quality = v) } }
     fun onColorChanged(v: String) { _uiState.update { it.copy(color = v) } }
+    fun onLocationChanged(v: String) { _uiState.update { it.copy(location = v) } }
 
     fun onStartManualEntry() {
         _uiState.update {
@@ -87,6 +93,7 @@ class ScannerViewModel @Inject constructor(
                 thickness = "",
                 quality = "",
                 color = "",
+                location = "",
                 isDuplicate = false
             )
         }

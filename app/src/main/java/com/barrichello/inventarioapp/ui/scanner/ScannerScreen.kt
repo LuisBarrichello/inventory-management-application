@@ -300,12 +300,6 @@ private fun ScannerBottomSheetContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Text(
-            text = "Etiqueta:",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary
-        )
-
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -377,9 +371,32 @@ private fun ScannerBottomSheetContent(
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Characters,
-                imeAction = ImeAction.Done
+                imeAction = ImeAction.Next
             )
         )
+
+        Spacer(Modifier.height(24.dp))
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = uiState.location,
+                onValueChange = { viewModel.onLocationChanged(it) },
+                label = { Text("Localização (Fileira)") },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                prefix = {
+                    Text(
+                        text = "F-",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                )
+            )
+        }
 
         Spacer(Modifier.height(24.dp))
 
