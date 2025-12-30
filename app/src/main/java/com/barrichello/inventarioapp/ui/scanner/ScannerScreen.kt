@@ -1,6 +1,12 @@
 package com.barrichello.inventarioapp.ui.scanner
 
 import android.Manifest
+import android.content.Context
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.view.ViewGroup
 import androidx.camera.core.Camera
@@ -131,8 +137,32 @@ private fun ScannerContent(
     val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = remember {
         ProcessCameraProvider.getInstance(context)
     }
+
+    val vibrator = remember {
+        if (Build.VERSION.SDK_INT >= 31) {
+            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+
+    val toneGenerator = remember {
+        ToneGenerator(AudioManager.STREAM_MUSIC, 100)
+    }
+
     val barcodeAnalyzer = remember {
         BarcodeAnalyzer { barcode, extractedData ->
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
+
+            if (Build.VERSION.SDK_INT >= 26) {
+                vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(150)
+            }
+
             viewModel.onResultFound(barcode, extractedData)
         }
     }
