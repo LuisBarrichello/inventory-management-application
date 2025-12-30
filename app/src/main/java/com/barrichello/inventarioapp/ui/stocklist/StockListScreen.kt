@@ -230,8 +230,9 @@ fun CoilDetailDialog(
                 DetailRow("Espessura", item.thickness)
                 DetailRow("Qualidade", item.quality)
                 DetailRow("Cor", item.color)
+                DetailRow("Localização", item.location)
 
-                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+//                HorizontalDivider(Modifier.padding(vertical = 12.dp))
 
                 DetailRow("Etiqueta (Barcode)", item.barcode)
                 DetailRow("Data Leitura", item.lastUpdate.toFormattedDate())

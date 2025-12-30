@@ -65,6 +65,11 @@ class BarcodeAnalyzer(
         textRecognizer.process(image)
             .addOnSuccessListener { visionText ->
                 val extractedData = parseLabelText(visionText.text)
+
+                Log.d("OCR_LEITURA", "----------------------------------------------------")
+                Log.d("OCR_LEITURA", "TEXTO COMPLETO DETECTADO:\n$extractedData")
+                Log.d("OCR_LEITURA", "----------------------------------------------------")
+
                 pause()
                 onResultFound(barcode, extractedData)
             }
@@ -77,15 +82,20 @@ class BarcodeAnalyzer(
     }
 
     private fun parseLabelText(fullText: String): ExtractedData {
+        val orderPattern = Regex("""(?i)PEDIDO\s+COMPRA[^0-9]*(\d+)""")
+        val orderValue = orderPattern.find(fullText)?.groupValues?.get(1)
+
         val coilIdPattern = Regex("""\b\d{5}\b""")
-        val weightPattern = Regex("""(?i)PESO[:\s\n]*([\d\.,]+)""")
-        val thicknessPattern = Regex("""(?i)ESPESSURA[:\s\n]*([\d\.,]+)""")
-        val qualityPattern = Regex("""(?i)QUALIDADE[:\s\n]*(.+)""")
-        val colorPattern = Regex("""(?i)COR[:\s\n]*(.+)""")
+        val candidates = coilIdPattern.findAll(fullText).map { it.value }
+        val coilId = candidates.firstOrNull { it != orderValue } ?: ""
+
+        val weightPattern = Regex("""(?i)PESO[^0-9]*([\d]+[.,][\d]+)""")
+        val thicknessPattern = Regex("""(?i)ESPESSURA[^0-9]*([\d\.,]+)""")
+        val qualityPattern = Regex("""(?i)QUALI\s*DA\s*DE[:\s\-\.]*(.+)""")
+        val colorPattern = Regex("""(?i)COR[:\s\-\.]*(.+)""")
 
         Log.d("OCR_DEBUG", fullText)
 
-        val coilId = coilIdPattern.find(fullText)?.value ?: ""
         val rawWeight = weightPattern.find(fullText)?.groupValues?.get(1) ?: ""
         val rawThickness = thicknessPattern.find(fullText)?.groupValues?.get(1) ?: ""
         val quality = qualityPattern.find(fullText)?.groupValues?.get(1)?.trim() ?: ""

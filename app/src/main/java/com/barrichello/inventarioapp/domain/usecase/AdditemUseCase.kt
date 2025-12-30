@@ -21,10 +21,9 @@ class AdditemUseCase @Inject constructor(
       color: String,
       location: String
    ): AddItemResult {
-      val existingBarcode = repository.getItemByBarcode(barcode)
       val existingCoilId = repository.getItemByCoilId(coilId)
 
-      if (existingBarcode != null || existingCoilId != null) {
+      if (existingCoilId != null) {
          return AddItemResult.Duplicate
       }
 
