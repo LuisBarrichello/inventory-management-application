@@ -391,6 +391,7 @@ private fun ScannerBottomSheetContent(
                 imeAction = ImeAction.Next
             )
         )
+
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
@@ -427,6 +428,20 @@ private fun ScannerBottomSheetContent(
                 )
             )
         }
+
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = uiState.observation,
+            onValueChange = { viewModel.onObservationChanged(it) },
+            label = { Text("Observação (Opcional)") },
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 3,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences,
+                imeAction = ImeAction.Done
+            )
+        )
 
         Spacer(Modifier.height(24.dp))
 

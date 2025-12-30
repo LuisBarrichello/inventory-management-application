@@ -232,7 +232,9 @@ fun CoilDetailDialog(
                 DetailRow("Cor", item.color)
                 DetailRow("Localização", item.location)
 
-//                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                if (item.observation.isNotBlank()) {
+                    DetailRow("Observação", item.observation)
+                }
 
                 DetailRow("Etiqueta (Barcode)", item.barcode)
                 DetailRow("Data Leitura", item.lastUpdate.toFormattedDate())

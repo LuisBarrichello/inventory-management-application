@@ -11,7 +11,7 @@ class CsvExporter @Inject constructor() {
     fun export(items: List<InventarioItem>): String {
         val csvBuilder  = StringBuilder()
 
-        csvBuilder.append("Etiqueta;ID G;Peso;Espessura;Qualidade;Cor;Localizacao;Hora de leitura\n")
+        csvBuilder.append("Etiqueta;ID G;Peso;Espessura;Qualidade;Cor;Localizacao;Observação;Hora da leitura\n")
 
         items.forEach { item ->
             val formattedDate = sdf.format(item.lastUpdate)
@@ -19,6 +19,7 @@ class CsvExporter @Inject constructor() {
             val cleanQuality = item.quality.replace(";", " ").replace("\n", " ").trim()
             val cleanColor = item.color.replace(";", " ").replace("\n", " ").trim()
             val cleanLocation = item.location.replace(";", " ").trim()
+            val cleanObservation = item.observation.replace(";", " ").replace("\n", " ").trim()
 
             val formattedWeight = item.weight
                 .replace(".", "")
@@ -26,7 +27,7 @@ class CsvExporter @Inject constructor() {
                 .toDoubleOrNull()?.toInt()?.toString() ?: item.weight
 
             csvBuilder.append(
-                "${item.barcode};${item.coilId};$formattedWeight;${item.thickness};$cleanQuality;$cleanColor;$cleanLocation;$formattedDate\n"
+                "${item.barcode};${item.coilId};$formattedWeight;${item.thickness};$cleanQuality;$cleanColor;$cleanLocation;$cleanObservation;$formattedDate\n"
             )
         }
 

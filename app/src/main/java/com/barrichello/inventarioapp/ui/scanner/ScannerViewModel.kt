@@ -21,6 +21,7 @@ data class ScannerUiState(
     val quality: String = "",
     val color: String = "",
     val location: String = "",
+    val observation: String = "",
     val isDuplicate: Boolean = false
 )
 
@@ -46,7 +47,8 @@ class ScannerViewModel @Inject constructor(
                 thickness = state.thickness,
                 quality = state.quality,
                 color = state.color,
-                location = finalLocation
+                location = finalLocation,
+                observation = state.observation
             )
 
             when (result) {
@@ -71,6 +73,7 @@ class ScannerViewModel @Inject constructor(
                 thickness = data.thickness,
                 quality = data.quality,
                 color = data.color,
+                observation = "",
                 isDuplicate = false
             )
         }
@@ -83,6 +86,7 @@ class ScannerViewModel @Inject constructor(
     fun onQualityChanged(v: String) { _uiState.update { it.copy(quality = v) } }
     fun onColorChanged(v: String) { _uiState.update { it.copy(color = v) } }
     fun onLocationChanged(v: String) { _uiState.update { it.copy(location = v) } }
+    fun onObservationChanged(v: String) { _uiState.update { it.copy(observation = v) } }
 
     fun onStartManualEntry() {
         _uiState.update {
@@ -94,6 +98,7 @@ class ScannerViewModel @Inject constructor(
                 quality = "",
                 color = "",
                 location = "",
+                observation = "",
                 isDuplicate = false
             )
         }

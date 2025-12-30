@@ -19,7 +19,8 @@ class AdditemUseCase @Inject constructor(
       thickness: String,
       quality: String,
       color: String,
-      location: String
+      location: String,
+      observation: String
    ): AddItemResult {
       val existingCoilId = repository.getItemByCoilId(coilId)
 
@@ -35,6 +36,7 @@ class AdditemUseCase @Inject constructor(
          quality = quality,
          color = color,
          location = location,
+         observation = observation,
          lastUpdate = System.currentTimeMillis()
       )
 
