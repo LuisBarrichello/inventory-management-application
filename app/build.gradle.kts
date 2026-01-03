@@ -3,8 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
-    alias(libs.plugins.google.firebase.appdistribution)
-    alias(libs.plugins.google.gms.google.services)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -101,4 +100,11 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
     implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation("com.google.firebase:firebase-analytics")
+
 }

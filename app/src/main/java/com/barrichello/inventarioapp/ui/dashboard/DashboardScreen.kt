@@ -15,7 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,6 +32,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,6 +59,38 @@ fun DashboardScreen(
 ) {
     val totalItemCount by viewModel.totalItemCount.collectAsState()
 
+    var showOrientationDialog by remember { mutableStateOf(false) }
+
+    if (showOrientationDialog) {
+        AlertDialog(
+            onDismissRequest = { showOrientationDialog = false },
+            title = {
+                Text(text = "Dica de Leitura")
+            },
+            text = {
+                Column {
+                    Text("Para maior agilidade no chão de fábrica:")
+                    Spacer(Modifier.height(8.dp))
+                    Text("1. Bloqueie a rotação do seu celular.")
+                    Text("2. Na hora de ler, gire o aparelho fisicamente.")
+                    Spacer(Modifier.height(8.dp))
+                    Text("Isso evita que a tela fique girando e travando durante o inventário.", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showOrientationDialog = false
+                        onNavigateToScanner()
+                    }
+                ) {
+                    Text("Entendi, Iniciar")
+                }
+            },
+            icon = { Icon(Icons.Default.ScreenRotation, contentDescription = null) }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -71,8 +108,6 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-
-            // Card de Resumo Visual
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -108,7 +143,13 @@ fun DashboardScreen(
             Spacer(Modifier.height(32.dp))
 
             Button(
-                onClick = onNavigateToScanner,
+                onClick = {
+                    if (totalItemCount == 0) {
+                        showOrientationDialog = true
+                    } else {
+                        onNavigateToScanner()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

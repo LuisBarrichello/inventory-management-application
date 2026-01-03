@@ -20,12 +20,15 @@ class AdditemUseCase @Inject constructor(
       quality: String,
       color: String,
       location: String,
-      observation: String
+      observation: String,
+      forceUpdate: Boolean = false
    ): AddItemResult {
-      val existingCoilId = repository.getItemByCoilId(coilId)
 
-      if (existingCoilId != null) {
-         return AddItemResult.Duplicate
+      if (!forceUpdate) {
+         val existingCoilId = repository.getItemByCoilId(coilId)
+         if (existingCoilId != null) {
+            return AddItemResult.Duplicate
+         }
       }
 
       val itemToSave = InventarioItem(

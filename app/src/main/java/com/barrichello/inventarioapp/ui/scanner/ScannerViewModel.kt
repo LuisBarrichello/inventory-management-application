@@ -3,6 +3,7 @@ package com.barrichello.inventarioapp.ui.scanner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barrichello.inventarioapp.core.barcode.ExtractedData
+import com.barrichello.inventarioapp.data.local.preferences.InventoryPreferences
 import com.barrichello.inventarioapp.domain.usecase.AddItemResult
 import com.barrichello.inventarioapp.domain.usecase.AdditemUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +28,8 @@ data class ScannerUiState(
 
 @HiltViewModel
 class ScannerViewModel @Inject constructor(
-    private val addItemUseCase: AdditemUseCase
+    private val addItemUseCase: AdditemUseCase,
+    private val preferences: InventoryPreferences
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ScannerUiState())
     val uiState: StateFlow<ScannerUiState> = _uiState.asStateFlow()
@@ -48,11 +50,17 @@ class ScannerViewModel @Inject constructor(
                 quality = state.quality,
                 color = state.color,
                 location = finalLocation,
-                observation = state.observation
+                observation = state.observation,
+                forceUpdate = state.isDuplicate
             )
 
             when (result) {
-                is AddItemResult.Success -> dismissBottomSheet()
+                is AddItemResult.Success -> {
+                    if (finalLocation.isNotBlank()) {
+                        preferences.saveLastLocation(finalLocation)
+                    }
+                    dismissBottomSheet()
+                }
                 is AddItemResult.Duplicate -> _uiState.update { it.copy(isDuplicate = true) }
             }
         }
@@ -64,6 +72,7 @@ class ScannerViewModel @Inject constructor(
 
     fun onResultFound(barcode: String, data: ExtractedData) {
         val cleanBarcode = barcode.trimStart('0').ifEmpty { barcode }
+        val savedLocation = preferences.getLastLocation()
 
         _uiState.update {
             it.copy(
@@ -73,6 +82,7 @@ class ScannerViewModel @Inject constructor(
                 thickness = data.thickness,
                 quality = data.quality,
                 color = data.color,
+                location = savedLocation,
                 observation = "",
                 isDuplicate = false
             )
@@ -89,6 +99,7 @@ class ScannerViewModel @Inject constructor(
     fun onObservationChanged(v: String) { _uiState.update { it.copy(observation = v) } }
 
     fun onStartManualEntry() {
+        val savedLocation = preferences.getLastLocation()
         _uiState.update {
             it.copy(
                 scannedBarcode = "",
@@ -97,7 +108,7 @@ class ScannerViewModel @Inject constructor(
                 thickness = "",
                 quality = "",
                 color = "",
-                location = "",
+                location = savedLocation,
                 observation = "",
                 isDuplicate = false
             )

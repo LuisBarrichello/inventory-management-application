@@ -2,6 +2,7 @@ package com.barrichello.inventarioapp.ui.scanner
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
@@ -9,6 +10,9 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -31,21 +35,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +57,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,63 +80,53 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.barrichello.inventarioapp.core.barcode.BarcodeAnalyzer
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun ScannerScreen(
-    viewModel: ScannerViewModel = hiltViewModel()
-) {
-    val cameraPermissionState = rememberPermissionState(
-        permission = Manifest.permission.CAMERA
-    )
-
-    Scaffold(
-        floatingActionButton = {
-            if (cameraPermissionState.status.isGranted) {
-                ExtendedFloatingActionButton(
-                    text = { Text("Entrada Manual") },
-                    icon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                    onClick = { viewModel.onStartManualEntry() },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            if (cameraPermissionState.status.isGranted) {
-                ScannerContent(viewModel = viewModel)
-            } else {
-                PermissionRequestContent(
-                    onRequestPermission = {
-                        cameraPermissionState.launchPermissionRequest()
-                    }
-                )
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ScannerContent(
-    viewModel: ScannerViewModel
+fun ScannerScreen(
+    viewModel: ScannerViewModel = hiltViewModel(),
+    onNavigateUp: () -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val uiState by viewModel.uiState.collectAsState()
 
-    var hasFlashlight by remember { mutableStateOf(false) }
-    var isFlashlightOn by remember { mutableStateOf(false) }
-    val camera = remember { mutableStateOf<Camera?>(null) }
-    val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = remember {
-        ProcessCameraProvider.getInstance(context)
+    var hasCamPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            hasCamPermission = granted
+            if (!granted) {
+                Toast.makeText(context, "Permissão de câmera necessária", Toast.LENGTH_SHORT).show()
+                onNavigateUp()
+            }
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        if (!hasCamPermission) {
+            launcher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    if (!hasCamPermission) {
+        PermissionRequestContent(onRequestPermission = { launcher.launch(Manifest.permission.CAMERA) })
+        return
+    }
+
+    val uiState by viewModel.uiState.collectAsState()
+    var cameraControl by remember { mutableStateOf<androidx.camera.core.CameraControl?>(null) }
+    var isFlashOn by remember { mutableStateOf(false) }
+
+    fun toggleFlash() {
+        isFlashOn = !isFlashOn
+        cameraControl?.enableTorch(isFlashOn)
     }
 
     val vibrator = remember {
@@ -147,28 +138,23 @@ private fun ScannerContent(
             context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
     }
-
-    val toneGenerator = remember {
-        ToneGenerator(AudioManager.STREAM_MUSIC, 100)
-    }
+    val toneGenerator = remember { ToneGenerator(AudioManager.STREAM_MUSIC, 100) }
 
     val barcodeAnalyzer = remember {
-        BarcodeAnalyzer { barcode, extractedData ->
+        BarcodeAnalyzer { barcode, data ->
             toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
-
             if (Build.VERSION.SDK_INT >= 26) {
                 vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
             } else {
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(150)
             }
-
-            viewModel.onResultFound(barcode, extractedData)
+            viewModel.onResultFound(barcode, data)
         }
     }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val showBottomSheet = uiState.scannedBarcode != null
+    val showBottomSheet = uiState.scannedBarcode != null || uiState.coilId.isNotEmpty()
 
     LaunchedEffect(showBottomSheet) {
         if (showBottomSheet) {
@@ -179,118 +165,126 @@ private fun ScannerContent(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            factory = { ctx ->
-                val previewView = PreviewView(ctx).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    scaleType = PreviewView.ScaleType.FILL_CENTER
-                }
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
-                    val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
-                    val imageAnalysis = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also {
-                            it.setAnalyzer(Executors.newSingleThreadExecutor(), barcodeAnalyzer)
-                        }
-                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                    try {
-                        cameraProvider.unbindAll()
-                        val cameraInstance = cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis
-                        )
-                        camera.value = cameraInstance
-                        hasFlashlight = cameraInstance.cameraInfo.hasFlashUnit()
-                    } catch (e: Exception) {
-                        Log.e("ScannerScreen", "Falha ao bindar CameraX", e)
-                    }
-                }, ContextCompat.getMainExecutor(ctx))
-                previewView
-            },
-            modifier = Modifier.fillMaxSize()
-        )
-
+    Scaffold(
+        floatingActionButtonPosition = FabPosition.Center,
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                text = { Text("Entrada Manual") },
+                icon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                onClick = { viewModel.onStartManualEntry() },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.6f)),
-            contentAlignment = Alignment.Center
+                .padding(paddingValues)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+            AndroidView(
+                factory = { ctx ->
+                    val previewView = PreviewView(ctx).apply {
+                        scaleType = PreviewView.ScaleType.FILL_CENTER
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                    val cameraExecutor = Executors.newSingleThreadExecutor()
+                    val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+
+                    cameraProviderFuture.addListener({
+                        val provider = cameraProviderFuture.get()
+                        val preview = Preview.Builder().build().also {
+                            it.setSurfaceProvider(previewView.surfaceProvider)
+                        }
+                        val imageAnalysis = ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .build()
+                            .also {
+                                it.setAnalyzer(cameraExecutor, barcodeAnalyzer)
+                            }
+                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                        try {
+                            provider.unbindAll()
+                            val camera = provider.bindToLifecycle(
+                                lifecycleOwner,
+                                cameraSelector,
+                                preview,
+                                imageAnalysis
+                            )
+                            cameraControl = camera.cameraControl
+                        } catch (e: Exception) {
+                            Log.e("ScannerScreen", "Erro câmera", e)
+                        }
+                    }, ContextCompat.getMainExecutor(ctx))
+                    previewView
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Column(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(220.dp)
-                        .border(3.dp, Color.White, RoundedCornerShape(16.dp))
-                )
-
-                Spacer(Modifier.height(24.dp))
+                        .height(80.dp)
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.6f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = { toggleFlash() },
+                        modifier = Modifier
+                            .padding(top = 24.dp)
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+                            .size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isFlashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                            contentDescription = "Flash",
+                            tint = Color.White
+                        )
+                    }
+                }
 
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .background(
-                            color = Color.Black.copy(alpha = 0.7f),
-                            shape = RoundedCornerShape(50)
-                        )
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .fillMaxWidth()
+                        .weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Girar",
-                        tint = Color.Yellow,
-                        modifier = Modifier.size(24.dp)
+                    Box(modifier = Modifier.width(16.dp).fillMaxSize().background(Color.Black.copy(alpha = 0.6f)))
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxSize()
+                            .background(Color.Transparent)
+                            .border(2.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
                     )
+                    Box(modifier = Modifier.width(16.dp).fillMaxSize().background(Color.Black.copy(alpha = 0.6f)))
+                }
 
-                    Spacer(Modifier.width(12.dp))
-
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .height(120.dp)
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.6f)),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(top = 16.dp)
+                    ) {
                         Text(
-                            text = "Gire o celular (Horizontal)",
+                            text = "Vire o celular fisicamente",
                             color = Color.Yellow,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Enquadre a etiqueta INTEIRA",
-                            color = Color.White,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
-            }
-        }
-
-        if (hasFlashlight) {
-            IconButton(
-                onClick = {
-                    isFlashlightOn = !isFlashlightOn
-                    camera.value?.cameraControl?.enableTorch(isFlashlightOn)
-                },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-            ) {
-                Icon(
-                    imageVector = if (isFlashlightOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                    contentDescription = "Lanterna",
-                    tint = Color.White
-                )
             }
         }
     }
@@ -342,10 +336,7 @@ private fun ScannerBottomSheetContent(
                 focusedTextColor = MaterialTheme.colorScheme.primary,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             ),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next
-            )
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
         )
 
         Spacer(Modifier.height(16.dp))
@@ -358,6 +349,7 @@ private fun ScannerBottomSheetContent(
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
         )
+
         Spacer(Modifier.height(8.dp))
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -378,6 +370,7 @@ private fun ScannerBottomSheetContent(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
             )
         }
+
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
@@ -386,10 +379,7 @@ private fun ScannerBottomSheetContent(
             label = { Text("Qualidade") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Characters,
-                imeAction = ImeAction.Next
-            )
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next)
         )
 
         Spacer(Modifier.height(8.dp))
@@ -400,10 +390,7 @@ private fun ScannerBottomSheetContent(
             label = { Text("Cor") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Characters,
-                imeAction = ImeAction.Next
-            )
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -416,16 +403,9 @@ private fun ScannerBottomSheetContent(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 prefix = {
-                    Text(
-                        text = "F-",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Text(text = "F-", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                )
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
             )
         }
 
@@ -437,10 +417,7 @@ private fun ScannerBottomSheetContent(
             label = { Text("Observação (Opcional)") },
             modifier = Modifier.fillMaxWidth(),
             maxLines = 3,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Done
-            )
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done)
         )
 
         Spacer(Modifier.height(24.dp))
@@ -491,9 +468,7 @@ private fun PermissionRequestContent(
     onRequestPermission: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

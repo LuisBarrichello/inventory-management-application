@@ -32,7 +32,9 @@ fun AppNavigation() {
         }
 
         composable(AppScreens.Scanner.route) {
-            ScannerScreen()
+            ScannerScreen(
+                onNavigateUp = { navController.popBackStack() }
+            )
         }
 
         composable(AppScreens.StockList.route) {
