@@ -21,6 +21,7 @@ mlkitBarcode = "17.2.0"
 coroutines = "1.8.0"
 googleFirebaseAppdistribution = "5.2.0"
 googleGmsGoogleServices = "4.4.4"
+material3 = "1.4.0"
 
 
 [libraries]
@@ -63,6 +64,7 @@ mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning"
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 
 
 [plugins]

@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.barrichello.inventarioapp"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.barrichello.inventarioapp"
@@ -70,6 +70,7 @@ dependencies {
 
     // Dependency Injection (Hilt)
     implementation("com.google.dagger:hilt-android:2.51.1")
+    implementation(libs.androidx.material3)
     ksp("com.google.dagger:hilt-compiler:2.51.1") // Usando ksp
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 

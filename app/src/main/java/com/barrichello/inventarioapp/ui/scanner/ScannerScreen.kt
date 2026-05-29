@@ -443,20 +443,31 @@ private fun ScannerBottomSheetContent(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedButton(
                 onClick = onCancel,
-                modifier = Modifier.weight(1f).height(50.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
             ) {
                 Text("CANCELAR")
             }
+
             Button(
                 onClick = { viewModel.onConfirmItem() },
-                modifier = Modifier.weight(1f).height(50.dp)
+                modifier = Modifier
+                    .weight(1.5f)
+                    .height(56.dp)
             ) {
-                Text(if (uiState.isDuplicate) "SUBSTITUIR" else "CONFIRMAR")
+                Text(
+                    text = if (uiState.isDuplicate) "SUBSTITUIR" else "CONFIRMAR",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
         Spacer(Modifier.height(300.dp))
