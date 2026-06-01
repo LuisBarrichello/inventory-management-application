@@ -9,5 +9,6 @@ data class InventarioItem (
     val color: String,
     val location: String,
     val observation: String,
-    val lastUpdate: Long
+    val lastUpdate: Long,
+    val status: String
 )

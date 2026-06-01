@@ -14,5 +14,6 @@ data class InventarioItemEntity(
     val color: String,
     val location: String,
     val observation: String,
-    val lastUpdate: Long
+    val lastUpdate: Long,
+    val status: String
 )

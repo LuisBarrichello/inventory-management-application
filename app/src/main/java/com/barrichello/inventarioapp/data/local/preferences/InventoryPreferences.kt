@@ -15,6 +15,7 @@ class InventoryPreferences @Inject constructor(
 
     companion object {
         private const val KEY_LAST_LOCATION = "last_location"
+        private const val KEY_LAST_STATUS = "last_status"
     }
 
     fun getLastLocation(): String {
@@ -26,7 +27,16 @@ class InventoryPreferences @Inject constructor(
         prefs.edit().putString(KEY_LAST_LOCATION, clearLocation).apply()
     }
 
+    fun getLastStatus(): String {
+        return prefs.getString(KEY_LAST_STATUS, "FECHADA") ?: "FECHADA"
+    }
+
+    fun saveLastStatus(status: String) {
+        prefs.edit().putString(KEY_LAST_STATUS, status).apply()
+    }
+
     fun clearLastLocation() {
         prefs.edit().remove(KEY_LAST_LOCATION).apply()
+        prefs.edit().remove(KEY_LAST_STATUS).apply()
     }
 }

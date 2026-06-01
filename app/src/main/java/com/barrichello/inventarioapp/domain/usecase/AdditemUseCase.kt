@@ -21,7 +21,8 @@ class AdditemUseCase @Inject constructor(
       color: String,
       location: String,
       observation: String,
-      forceUpdate: Boolean = false
+      forceUpdate: Boolean = false,
+      status: String
    ): AddItemResult {
 
       if (!forceUpdate) {
@@ -40,7 +41,8 @@ class AdditemUseCase @Inject constructor(
          color = color,
          location = location,
          observation = observation,
-         lastUpdate = System.currentTimeMillis()
+         lastUpdate = System.currentTimeMillis(),
+         status = status
       )
 
       repository.upsertItem(itemToSave)

@@ -393,7 +393,54 @@ private fun ScannerBottomSheetContent(
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Next)
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(8.dp))
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Estado da Bobina",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (uiState.status == "FECHADA") {
+                    Button(
+                        onClick = { },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("FECHADA")
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = { viewModel.onStatusChanged("FECHADA") },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("FECHADA")
+                    }
+                }
+
+                if (uiState.status == "ABERTA") {
+                    Button(
+                        onClick = { },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("ABERTA")
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = { viewModel.onStatusChanged("ABERTA") },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("ABERTA")
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
 
         Row(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(

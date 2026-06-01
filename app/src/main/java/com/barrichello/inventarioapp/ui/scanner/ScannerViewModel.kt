@@ -23,7 +23,8 @@ data class ScannerUiState(
     val color: String = "",
     val location: String = "",
     val observation: String = "",
-    val isDuplicate: Boolean = false
+    val isDuplicate: Boolean = false,
+    val status: String = "FECHADA"
 )
 
 @HiltViewModel
@@ -42,7 +43,7 @@ class ScannerViewModel @Inject constructor(
         val finalLocation = if (rawLoc.startsWith("F-")) rawLoc else "F-$rawLoc"
 
         viewModelScope.launch {
-            val result = addItemUseCase(
+            val result = addItemUseCase.invoke(
                 barcode = code,
                 coilId = state.coilId,
                 weight = state.weight,
@@ -51,6 +52,7 @@ class ScannerViewModel @Inject constructor(
                 color = state.color,
                 location = finalLocation,
                 observation = state.observation,
+                status = state.status,
                 forceUpdate = state.isDuplicate
             )
 
@@ -59,6 +61,7 @@ class ScannerViewModel @Inject constructor(
                     if (finalLocation.isNotBlank()) {
                         preferences.saveLastLocation(finalLocation)
                     }
+                    preferences.saveLastStatus(state.status)
                     dismissBottomSheet()
                 }
                 is AddItemResult.Duplicate -> _uiState.update { it.copy(isDuplicate = true) }
@@ -73,6 +76,7 @@ class ScannerViewModel @Inject constructor(
     fun onResultFound(barcode: String, data: ExtractedData) {
         val cleanBarcode = barcode.trimStart('0').ifEmpty { barcode }
         val savedLocation = preferences.getLastLocation()
+        val savedStatus = preferences.getLastStatus()
 
         _uiState.update {
             it.copy(
@@ -84,7 +88,8 @@ class ScannerViewModel @Inject constructor(
                 color = data.color,
                 location = savedLocation,
                 observation = "",
-                isDuplicate = false
+                isDuplicate = false,
+                status = savedStatus
             )
         }
     }
@@ -100,6 +105,7 @@ class ScannerViewModel @Inject constructor(
 
     fun onStartManualEntry() {
         val savedLocation = preferences.getLastLocation()
+        val savedStatus = preferences.getLastStatus()
         _uiState.update {
             it.copy(
                 scannedBarcode = "",
@@ -110,8 +116,11 @@ class ScannerViewModel @Inject constructor(
                 color = "",
                 location = savedLocation,
                 observation = "",
-                isDuplicate = false
+                isDuplicate = false,
+                status = savedStatus
             )
         }
     }
+
+    fun onStatusChanged(v: String) { _uiState.update { it.copy(status = v) } }
 }

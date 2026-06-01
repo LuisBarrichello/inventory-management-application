@@ -249,6 +249,7 @@ fun CoilDetailDialog(
                 Spacer(Modifier.height(16.dp))
 
                 DetailRow("ID Bobina (G)", item.coilId, highlight = true)
+                DetailRow("Estado", item.status, highlight = true)
                 DetailRow("Peso", "${item.weight} kg")
                 DetailRow("Espessura", item.thickness)
                 DetailRow("Qualidade", item.quality)

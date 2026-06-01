@@ -14,6 +14,7 @@ fun InventarioItemEntity.toDomain(): InventarioItem {
         location = this.location,
         observation = observation,
         lastUpdate = this.lastUpdate,
+        status = this.status
     )
 }
 
@@ -28,5 +29,6 @@ fun InventarioItem.toEntity(): InventarioItemEntity {
         location = this.location,
         observation = this.observation,
         lastUpdate = this.lastUpdate,
+        status = this.status
     )
 }
